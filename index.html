@@ -2,6 +2,9 @@
 <html>
 <head>
     <title>Scrum poker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Faker/3.1.0/faker.min.js"
+            integrity="sha512-/seDHxVfh1NvFUscAj8GsHQVZJvr2jjAoYsNL7As2FCaFHUHYIarl3sRCvVlFgyouVNiRgHIebyLKjpgd1SLDw=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         body {
             margin: 0;
@@ -221,8 +224,10 @@
 
   let session = localStorage.getItem('session');
   if (!session) {
-    const myId = makeid(5);
-    localStorage.setItem('session', myId);
+    // const myId = makeid(5);
+    var randomName = faker.name.findName(null, null, 1); // Caitlyn Kerluke
+
+    localStorage.setItem('session', randomName);
   }
   session = localStorage.getItem('session');
 
