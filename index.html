@@ -84,6 +84,11 @@
             border-width: 4px;
         }
 
+        .card.empty {
+            background-color: rgba(0, 0, 0, 0.08);
+            border-color: rgba(0, 0, 0, 0.04);
+        }
+
         #cardOptions {
             display: flex;
             flex-direction: row;
@@ -172,14 +177,14 @@
 <h3>Hello <span id="youare"></span></h3>
 <div id="users">
 </div>
-<div id="users-old" style="display: none">
-</div>
 
 <div id="table">
     Pick your card
     <br/>
     <button id="showCard">Show cards</button>
     <button id="hideCard">Hide cards</button>
+    <br/>
+    <button id="newVote">Start new voting</button>
 </div>
 <div id="cardOptions">
     <div class="card-col">
@@ -208,32 +213,12 @@
     </div>
 </div>
 
-<form id="form" action="" style="display: none">
-    <input id="input" autocomplete="off"/>
-    <button>Send</button>
-</form>
 <script src="/socket.io/socket.io.js"></script>
 
 <script>
-
-
-  function makeid(length) {
-    var result = '';
-    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    var charactersLength = characters.length;
-    for (var i = 0; i < length; i++) {
-      result += characters.charAt(Math.floor(Math.random() *
-        charactersLength));
-    }
-    return result;
-  }
-
-
   let session = localStorage.getItem('session');
   if (!session) {
-    // const myId = makeid(5);
-    var randomName = faker.name.findName(null, null, 1); // Caitlyn Kerluke
-
+    const randomName = faker.name.findName(null, null, 1);
     localStorage.setItem('session', randomName);
   }
   session = localStorage.getItem('session');
@@ -242,16 +227,12 @@
 
   var youare = document.getElementById('youare');
   youare.innerText = session;
-  var input = document.getElementById('input');
 
-  function doSubmit() {
-    if (input.value) {
-      socket.emit('chat message', {
-        user: session,
-        value: input.value
-      });
-    }
-    input.value = '';
+  function doSubmit(value) {
+    socket.emit('chat message', {
+      user: session,
+      value: value
+    });
   }
 
 
@@ -261,6 +242,7 @@
   });
 
   socket.on('welcome', function (currentState) {
+    console.log('welcome', currentState);
     const msgs = currentState.history;
     if (msgs && msgs.length) {
       for (let i = 0; i < msgs.length; i++) {
@@ -268,6 +250,7 @@
       }
     }
     cardShowOrHide(currentState.cardsShown);
+    doSubmit('');
   });
 
   socket.on('chat message', function (msg) {
@@ -275,9 +258,15 @@
   });
 
   function onMsg(msg) {
-    let card = provideSeats(msg.user);
-    let score = card.getElementsByClassName('card')[0].getElementsByClassName('score')[0];
+    let seat = provideSeats(msg.user);
+    let card = seat.getElementsByClassName('card')[0];
+    let score = card.getElementsByClassName('score')[0];
     score.innerHTML = msg.value;
+    if (msg.value) {
+      card.classList.remove('empty');
+    } else {
+      card.classList.add('empty');
+    }
   }
 
   function provideSeats(user) {
@@ -327,7 +316,7 @@
       if (cardShown) {
         card1.classList.remove("back");
         score.style.display = "block";
-      } else {
+      } else if (!card1.classList.contains("empty")) {
         card1.classList.add("back");
         score.style.display = "none";
       }
@@ -354,10 +343,8 @@
     for (let i = 0; i < cards.length; i++) {
       const card = cards[i];
       card.addEventListener("click", function () {
-        // alert("Your message"+card.innerHTML);
-        input.value = card.innerHTML;
         chooseActiveCardClass(i);
-        doSubmit();
+        doSubmit(card.innerHTML);
       });
     }
 
@@ -370,9 +357,15 @@
       socket.emit("set cards shown", false);
     });
 
+    const newVoteBtn = document.getElementById("newVote");
+    newVoteBtn.addEventListener("click", function () {
+      socket.emit("new vote", true);
+    });
+
     if (session !== "Scrum Master") {
       showCardBtn.style.display = "none";
       hideCardBtn.style.display = "none";
+      newVoteBtn.style.display = "none";
     }
   })();
 </script>

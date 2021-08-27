@@ -29,6 +29,12 @@ io.on('connection', (socket) => {
     currentState.cardsShown = msg;
     io.emit('view cards shown', currentState.cardsShown);
   });
+  socket.on('new vote', msg => {
+    console.log('new vote', msg);
+    currentState.cardsShown = false;
+    currentState.history = [];
+    io.emit('welcome', currentState);
+  });
 });
 
 http.listen(port, () => {
