@@ -78,6 +78,12 @@
             background: linear-gradient(45deg, #3993ff 12%, transparent 0, transparent 88%, #3993ff 0), linear-gradient(135deg, transparent 37%, #1a7bf2 0, #1a7bf2 63%, transparent 0), linear-gradient(45deg, transparent 37%, #3993ff 0, #3993ff 63%, transparent 0), #74b3ff;
         }
 
+        .card.active {
+            background-color: #3993ff;
+            color: white;
+            border-width: 4px;
+        }
+
         #cardOptions {
             display: flex;
             flex-direction: row;
@@ -170,7 +176,7 @@
 </div>
 
 <div id="table">
-    Pick your cards
+    Pick your card
     <br/>
     <button id="showCard">Show cards</button>
     <button id="hideCard">Hide cards</button>
@@ -234,16 +240,9 @@
 
   var socket = io();
 
-  var messages = document.getElementById('messages');
   var youare = document.getElementById('youare');
   youare.innerText = session;
-  var form = document.getElementById('form');
   var input = document.getElementById('input');
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    doSubmit();
-  });
 
   function doSubmit() {
     if (input.value) {
@@ -335,6 +334,18 @@
     }
   }
 
+  function chooseActiveCardClass(index) {
+    const cards = document.getElementById("cardOptions").getElementsByClassName("card");
+    for (let i = 0; i < cards.length; i++) {
+      const card = cards[i];
+      if (i == index) {
+        card.classList.add('active');
+      } else {
+        card.classList.remove('active');
+      }
+    }
+  }
+
   //onReady
   (function () {
     // your page initialization code here
@@ -345,6 +356,7 @@
       card.addEventListener("click", function () {
         // alert("Your message"+card.innerHTML);
         input.value = card.innerHTML;
+        chooseActiveCardClass(i);
         doSubmit();
       });
     }
