@@ -173,6 +173,7 @@
     Pick your cards
     <br/>
     <button id="showCard">Show cards</button>
+    <button id="hideCard">Hide cards</button>
 </div>
 <div id="cardOptions">
     <div class="card-col">
@@ -254,8 +255,23 @@
     input.value = '';
   }
 
+
+  socket.on('view cards shown', function (msg) {
+    console.log('view cards shown', msg);
+    cardShowOrHide(msg);
+  });
+
+  socket.on('welcome', function (currentState) {
+    const msgs = currentState.history;
+    if (msgs && msgs.length) {
+      for (let i = 0; i < msgs.length; i++) {
+        onMsg(msgs[i]);
+      }
+    }
+    cardShowOrHide(currentState.cardsShown);
+  });
+
   socket.on('chat message', function (msg) {
-    onMsgOld(msg);
     onMsg(msg);
   });
 
@@ -263,27 +279,7 @@
     let card = provideSeats(msg.user);
     let score = card.getElementsByClassName('card')[0].getElementsByClassName('score')[0];
     score.innerHTML = msg.value;
-
-
-    cardShowOrHide();
   }
-
-  function onMsgOld(msg) {
-    let messages = provideSeatsOld(msg.user);
-    var item = document.createElement('li');
-    item.textContent = msg.value;
-    messages.appendChild(item);
-    window.scrollTo(0, document.body.scrollHeight);
-  }
-
-  socket.on('chat history', function (msgs) {
-    if (msgs && msgs.length) {
-      for (let i = 0; i < msgs.length; i++) {
-        onMsgOld(msgs[i]);
-        onMsg(msgs[i]);
-      }
-    }
-  });
 
   function provideSeats(user) {
     const users = document.getElementById("users");
@@ -324,39 +320,7 @@
 
   }
 
-  function provideSeatsOld(user) {
-    const users = document.getElementById("users-old");
-    const msgs = users.querySelectorAll('.messages');
-    let foundI = -1;
-    for (let i = 0; i < msgs.length; i++) {
-      const useri = msgs[i].getAttribute('data-user');
-      if (useri === user) {
-        foundI = i;
-        break;
-      }
-    }
-    if (foundI < 0) {
-      console.log('not found');
-      var ul = document.createElement('ul');
-      ul.setAttribute('class', "messages");
-      ul.setAttribute('data-user', user);
-      users.appendChild(ul);
-
-      var li = document.createElement('li');
-      li.innerHTML = '<b>' + user + '</b>'
-      ul.appendChild(li);
-
-      return ul;
-    } else {
-      console.log('found');
-      return msgs[foundI];
-    }
-
-  }
-
-  let cardShown = false;
-
-  function cardShowOrHide() {
+  function cardShowOrHide(cardShown) {
     const cards = document.querySelectorAll("#users div.card");
     for (let i = 0; i < cards.length; i++) {
       let card1 = cards[i];
@@ -387,9 +351,17 @@
 
     const showCardBtn = document.getElementById("showCard");
     showCardBtn.addEventListener("click", function () {
-      cardShown = !cardShown;
-      cardShowOrHide();
+      socket.emit("set cards shown", true);
     });
+    const hideCardBtn = document.getElementById("hideCard");
+    hideCardBtn.addEventListener("click", function () {
+      socket.emit("set cards shown", false);
+    });
+
+    if (session !== "Scrum Master") {
+      showCardBtn.style.display = "none";
+      hideCardBtn.style.display = "none";
+    }
   })();
 </script>
 </body>
