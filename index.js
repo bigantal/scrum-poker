@@ -54,7 +54,7 @@ function voteArrived(msg) {
 io.on('connection', (socket) => {
   console.log('a user connected', socket.id);
   socket.emit('welcome', currentState);
-  socket.on('disconnect', reason => {
+  socket.on('disconnect', () => {
     console.log('user disconnected', socket.id);
   });
   socket.on('i am here', username => {
@@ -64,7 +64,7 @@ io.on('connection', (socket) => {
     }
   );
   socket.on('vote', msg => {
-    console.log('chat message', socket.id);
+    console.log('vote ' + socket.id, msg);
     voteArrived(msg);
     io.emit('current state', currentState);
   });
