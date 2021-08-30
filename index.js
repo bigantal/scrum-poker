@@ -8,32 +8,74 @@ app.get('/', (req, res) => {
 });
 
 let currentState = {
-  history: [],
+  votes: [],
+  // vote: {
+  //   socketId: 'unMYmxeN5KWeftWBAAAD',
+  //   username: 'Michael Knight',
+  //   vote: '8'
+  // },
   cardsShown: false
 }
 
+function restart() {
+  currentState.cardsShown = false;
+  currentState.votes = [];
+  io.emit('welcome', currentState);
+}
+
+function userSaidHi(socketId, username) {
+  let found = false;
+  for (let i = 0; i < currentState.votes.length; i++) {
+    if (currentState.votes[i].username === username) {
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    currentState.votes.push({
+      socketId: socketId,
+      username: username,
+      vote: null
+    })
+  }
+}
+
+function voteArrived(msg) {
+  for (let i = 0; i < currentState.votes.length; i++) {
+    let vote = currentState.votes[i];
+    if (vote.username === msg.username) {
+      vote.vote = msg.vote;
+      return;
+    }
+  }
+  console.error("no user in state", msg);
+}
+
 io.on('connection', (socket) => {
-  console.log('a user connected');
+  console.log('a user connected', socket.id);
   socket.emit('welcome', currentState);
-  socket.on('disconnect', () => {
-    console.log('user disconnected');
+  socket.on('disconnect', reason => {
+    console.log('user disconnected', socket.id);
   });
-  socket.on('chat message', msg => {
-    console.log('chat message');
-    currentState.history.push(msg);
-    io.emit('chat message', msg);
-    io.emit('view cards shown', currentState.cardsShown);
+  socket.on('i am here', username => {
+      console.log('i am here', socket.id);
+      userSaidHi(socket.id, username);
+      io.emit('current state', currentState);
+    }
+  );
+  socket.on('vote', msg => {
+    console.log('chat message', socket.id);
+    voteArrived(msg);
+    io.emit('current state', currentState);
   });
   socket.on('set cards shown', msg => {
     console.log('set cards shown', msg);
     currentState.cardsShown = msg;
-    io.emit('view cards shown', currentState.cardsShown);
+    io.emit('current state', currentState);
   });
   socket.on('new vote', msg => {
     console.log('new vote', msg);
-    currentState.cardsShown = false;
-    currentState.history = [];
-    io.emit('welcome', currentState);
+    restart();
   });
 });
 

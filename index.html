@@ -264,9 +264,9 @@
     }
 
     function doSubmit(value) {
-      socket.emit('chat message', {
-        user: session,
-        value: value
+      socket.emit('vote', {
+        username: session,
+        vote: value
       });
     }
 
@@ -286,39 +286,46 @@
 
     socket.on('welcome', function (currentState) {
       console.log('welcome', currentState);
-      const msgs = currentState.history;
-      if (msgs && msgs.length) {
-        for (let i = 0; i < msgs.length; i++) {
-          onMsg(msgs[i]);
+      stateUpdate(currentState);
+      socket.emit('i am here', session);
+    });
+
+    socket.on('current state', function (currentState) {
+      stateUpdate(currentState);
+    });
+
+    function stateUpdate(currentState) {
+      const votes = currentState.votes;
+      const users = document.getElementById("users");
+      users.innerHTML = '';
+
+      if (votes && votes.length) {
+        for (let i = 0; i < votes.length; i++) {
+          let vote = currentState.votes[i];
+          let seat = provideSeats(vote);
+          let card = seat.getElementsByClassName('card')[0];
+          let score = card.getElementsByClassName('score')[0];
+          score.innerHTML = vote.vote;
+          if (vote.vote) {
+            card.classList.remove('empty');
+          } else {
+            card.classList.add('empty');
+          }
+          if (vote.username === session) {
+            chooseActiveCardClass(vote.vote);
+          }
         }
       }
       cardShowOrHide(currentState.cardsShown);
-      doSubmit('');
-    });
-
-    socket.on('chat message', function (msg) {
-      onMsg(msg);
-    });
-
-    function onMsg(msg) {
-      let seat = provideSeats(msg.user);
-      let card = seat.getElementsByClassName('card')[0];
-      let score = card.getElementsByClassName('score')[0];
-      score.innerHTML = msg.value;
-      if (msg.value) {
-        card.classList.remove('empty');
-      } else {
-        card.classList.add('empty');
-      }
     }
 
-    function provideSeats(user) {
+    function provideSeats(vote) {
       const users = document.getElementById("users");
       const seats = users.querySelectorAll('.seat');
       let foundI = -1;
       for (let i = 0; i < seats.length; i++) {
         const useri = seats[i].getAttribute('data-user');
-        if (useri === user) {
+        if (useri === vote.username) {
           foundI = i;
           break;
         }
@@ -327,7 +334,7 @@
         console.log('not found');
         var div = document.createElement('div');
         div.setAttribute('class', "seat");
-        div.setAttribute('data-user', user);
+        div.setAttribute('data-user', vote.username);
         users.appendChild(div);
 
         var card = document.createElement('div');
@@ -340,7 +347,7 @@
 
         var name = document.createElement('div');
         name.setAttribute('class', "name");
-        name.innerHTML = user;
+        name.innerHTML = vote.username;
         div.appendChild(name);
 
         return div;
@@ -366,11 +373,11 @@
       }
     }
 
-    function chooseActiveCardClass(index) {
+    function chooseActiveCardClass(vote) {
       const cards = document.getElementById("cardOptions").getElementsByClassName("card");
       for (let i = 0; i < cards.length; i++) {
         const card = cards[i];
-        if (i == index) {
+        if (card.innerHTML === vote) {
           card.classList.add('active');
         } else {
           card.classList.remove('active');
@@ -382,7 +389,7 @@
     for (let i = 0; i < cards.length; i++) {
       const card = cards[i];
       card.addEventListener("click", function () {
-        chooseActiveCardClass(i);
+        chooseActiveCardClass(card.innerHTML);
         doSubmit(card.innerHTML);
       });
     }
