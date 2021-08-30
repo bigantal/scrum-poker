@@ -171,10 +171,32 @@
             height: 5.6rem;
             text-decoration: none;
         }
+
+        #youare {
+            color: #3993ff;
+        }
+
+        #youare-edit {
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-<h3>Hello <span id="youare"></span></h3>
+<h3>Hello, <span id="youare"></span>
+    <svg id="youare-edit" xmlns="http://www.w3.org/2000/svg" width="32px" height="32px" viewBox="0 0 32 32">
+        <g xmlns="http://www.w3.org/2000/svg" id="Icon-Pencil" fill="#3993ff">
+            <path d="M0.722,28.278 L3.16,18.524 L18,3.685 L25.315,11 L10.476,25.84 L0.722,28.278 L0.722,28.278 Z M4.84,19.476 L3.278,25.722 L9.524,24.16 L22.685,11 L18,6.315 L4.84,19.476 L4.84,19.476 Z"
+                  id="Fill-168"/>
+            <path d="M8.851,25.287 C8.219,22.75 6.25,20.781 3.713,20.149 L4.164,18.344 C7.369,19.143 9.857,21.631 10.656,24.836 L8.851,25.287"
+                  id="Fill-169"/>
+            <polyline id="Fill-170" points="8.658 21.658 7.342 20.342 20.342 7.342 21.658 8.658 8.658 21.658"/>
+            <path d="M2,27 L4.902,26.275 C4.634,25.204 3.796,24.366 2.725,24.098 L2,27" id="Fill-171"/>
+            <path d="M26,10.315 L18.685,3 L21.599,0.086 L22.054,0.147 C25.586,0.618 28.382,3.414 28.853,6.946 L28.914,7.401 L26,10.315 L26,10.315 Z M21.315,3 L26,7.685 L26.934,6.751 C26.442,4.405 24.595,2.558 22.249,2.066 L21.315,3 L21.315,3 Z"
+                  id="Fill-172"/>
+        </g>
+    </svg>
+
+</h3>
 <div id="users">
 </div>
 
@@ -216,129 +238,146 @@
 <script src="/socket.io/socket.io.js"></script>
 
 <script>
-  let session = localStorage.getItem('session');
-  if (!session) {
-    const randomName = faker.name.findName(null, null, 1);
-    localStorage.setItem('session', randomName);
-  }
-  session = localStorage.getItem('session');
-
-  var socket = io();
-
-  var youare = document.getElementById('youare');
-  youare.innerText = session;
-
-  function doSubmit(value) {
-    socket.emit('chat message', {
-      user: session,
-      value: value
-    });
-  }
-
-
-  socket.on('view cards shown', function (msg) {
-    console.log('view cards shown', msg);
-    cardShowOrHide(msg);
-  });
-
-  socket.on('welcome', function (currentState) {
-    console.log('welcome', currentState);
-    const msgs = currentState.history;
-    if (msgs && msgs.length) {
-      for (let i = 0; i < msgs.length; i++) {
-        onMsg(msgs[i]);
-      }
-    }
-    cardShowOrHide(currentState.cardsShown);
-    doSubmit('');
-  });
-
-  socket.on('chat message', function (msg) {
-    onMsg(msg);
-  });
-
-  function onMsg(msg) {
-    let seat = provideSeats(msg.user);
-    let card = seat.getElementsByClassName('card')[0];
-    let score = card.getElementsByClassName('score')[0];
-    score.innerHTML = msg.value;
-    if (msg.value) {
-      card.classList.remove('empty');
-    } else {
-      card.classList.add('empty');
-    }
-  }
-
-  function provideSeats(user) {
-    const users = document.getElementById("users");
-    const seats = users.querySelectorAll('.seat');
-    let foundI = -1;
-    for (let i = 0; i < seats.length; i++) {
-      const useri = seats[i].getAttribute('data-user');
-      if (useri === user) {
-        foundI = i;
-        break;
-      }
-    }
-    if (foundI < 0) {
-      console.log('not found');
-      var div = document.createElement('div');
-      div.setAttribute('class', "seat");
-      div.setAttribute('data-user', user);
-      users.appendChild(div);
-
-      var card = document.createElement('div');
-      card.setAttribute('class', "card");
-      div.appendChild(card);
-
-      var score = document.createElement('div');
-      score.setAttribute('class', "score");
-      card.appendChild(score);
-
-      var name = document.createElement('div');
-      name.setAttribute('class', "name");
-      name.innerHTML = user;
-      div.appendChild(name);
-
-      return div;
-    } else {
-      console.log('found');
-      return seats[foundI];
-    }
-
-  }
-
-  function cardShowOrHide(cardShown) {
-    const cards = document.querySelectorAll("#users div.card");
-    for (let i = 0; i < cards.length; i++) {
-      let card1 = cards[i];
-      let score = card1.getElementsByClassName("score")[0];
-      if (cardShown) {
-        card1.classList.remove("back");
-        score.style.display = "block";
-      } else if (!card1.classList.contains("empty")) {
-        card1.classList.add("back");
-        score.style.display = "none";
-      }
-    }
-  }
-
-  function chooseActiveCardClass(index) {
-    const cards = document.getElementById("cardOptions").getElementsByClassName("card");
-    for (let i = 0; i < cards.length; i++) {
-      const card = cards[i];
-      if (i == index) {
-        card.classList.add('active');
-      } else {
-        card.classList.remove('active');
-      }
-    }
-  }
 
   //onReady
   (function () {
     // your page initialization code here
     // the DOM will be available here
+    var socket = io();
+
+    var youare = document.getElementById('youare');
+
+    let session = localStorage.getItem('session');
+    if (!session) {
+      const randomName = faker.name.findName(null, null, 0);
+      newSession(randomName);
+    } else {
+      newSession(session);
+    }
+
+
+    function newSession(str) {
+      localStorage.setItem('session', str);
+      session = localStorage.getItem('session');
+      youare.innerText = session;
+
+    }
+
+    function doSubmit(value) {
+      socket.emit('chat message', {
+        user: session,
+        value: value
+      });
+    }
+
+    function enterYourName() {
+      var person = prompt("Please enter your name", session);
+      if (person != null) {
+        newSession(person);
+        location.reload();
+      }
+    }
+
+
+    socket.on('view cards shown', function (msg) {
+      console.log('view cards shown', msg);
+      cardShowOrHide(msg);
+    });
+
+    socket.on('welcome', function (currentState) {
+      console.log('welcome', currentState);
+      const msgs = currentState.history;
+      if (msgs && msgs.length) {
+        for (let i = 0; i < msgs.length; i++) {
+          onMsg(msgs[i]);
+        }
+      }
+      cardShowOrHide(currentState.cardsShown);
+      doSubmit('');
+    });
+
+    socket.on('chat message', function (msg) {
+      onMsg(msg);
+    });
+
+    function onMsg(msg) {
+      let seat = provideSeats(msg.user);
+      let card = seat.getElementsByClassName('card')[0];
+      let score = card.getElementsByClassName('score')[0];
+      score.innerHTML = msg.value;
+      if (msg.value) {
+        card.classList.remove('empty');
+      } else {
+        card.classList.add('empty');
+      }
+    }
+
+    function provideSeats(user) {
+      const users = document.getElementById("users");
+      const seats = users.querySelectorAll('.seat');
+      let foundI = -1;
+      for (let i = 0; i < seats.length; i++) {
+        const useri = seats[i].getAttribute('data-user');
+        if (useri === user) {
+          foundI = i;
+          break;
+        }
+      }
+      if (foundI < 0) {
+        console.log('not found');
+        var div = document.createElement('div');
+        div.setAttribute('class', "seat");
+        div.setAttribute('data-user', user);
+        users.appendChild(div);
+
+        var card = document.createElement('div');
+        card.setAttribute('class', "card");
+        div.appendChild(card);
+
+        var score = document.createElement('div');
+        score.setAttribute('class', "score");
+        card.appendChild(score);
+
+        var name = document.createElement('div');
+        name.setAttribute('class', "name");
+        name.innerHTML = user;
+        div.appendChild(name);
+
+        return div;
+      } else {
+        console.log('found');
+        return seats[foundI];
+      }
+
+    }
+
+    function cardShowOrHide(cardShown) {
+      const cards = document.querySelectorAll("#users div.card");
+      for (let i = 0; i < cards.length; i++) {
+        let card1 = cards[i];
+        let score = card1.getElementsByClassName("score")[0];
+        if (cardShown) {
+          card1.classList.remove("back");
+          score.style.display = "block";
+        } else if (!card1.classList.contains("empty")) {
+          card1.classList.add("back");
+          score.style.display = "none";
+        }
+      }
+    }
+
+    function chooseActiveCardClass(index) {
+      const cards = document.getElementById("cardOptions").getElementsByClassName("card");
+      for (let i = 0; i < cards.length; i++) {
+        const card = cards[i];
+        if (i == index) {
+          card.classList.add('active');
+        } else {
+          card.classList.remove('active');
+        }
+      }
+    }
+
     const cards = document.getElementById("cardOptions").getElementsByClassName("card");
     for (let i = 0; i < cards.length; i++) {
       const card = cards[i];
@@ -360,6 +399,10 @@
     const newVoteBtn = document.getElementById("newVote");
     newVoteBtn.addEventListener("click", function () {
       socket.emit("new vote", true);
+    });
+
+    document.getElementById("youare-edit").addEventListener("click", function () {
+      enterYourName();
     });
 
     if (session !== "Scrum Master") {
