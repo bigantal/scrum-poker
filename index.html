@@ -8,17 +8,17 @@
     <style>
         body {
             margin: 0;
-            padding-bottom: 3rem;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         .card {
-            width: 36px;
+            width: 10vw;
             border: 2px solid #3993ff;
             border-radius: 10px;
             color: #3993ff;
+            font-size: 6vw;
             font-weight: 700;
-            height: 60px;
+            height: 14vw;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -50,7 +50,6 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 6rem;
             box-sizing: border-box;
             backdrop-filter: blur(10px);
         }
@@ -60,7 +59,6 @@
         }
 
         #cardOptions .card {
-            margin-left: 36px;
             cursor: pointer;
         }
 
@@ -86,6 +84,7 @@
             align-items: center;
             justify-content: center;
             min-height: 200px;
+            margin-top: 26px;
         }
 
         .seat {
@@ -102,8 +101,18 @@
             font-weight: bold;
         }
 
-        h3 {
-            padding: 2rem;
+        h1, h2, h3 {
+            padding: 0 2rem;
+            position: fixed;
+            top: 0;
+        }
+
+        #footer {
+            min-height: 20vw;
+        }
+
+        .seat[data-user="Scrum Master"] {
+            display: none;
         }
 
         button {
@@ -136,7 +145,7 @@
     </style>
 </head>
 <body>
-<h3>Hello, <span id="youare"></span>
+<h1>Hello, <span id="youare"></span>
     <svg id="youare-edit" xmlns="http://www.w3.org/2000/svg" width="32px" height="32px" viewBox="0 0 32 32">
         <g xmlns="http://www.w3.org/2000/svg" id="Icon-Pencil" fill="#3993ff">
             <path d="M0.722,28.278 L3.16,18.524 L18,3.685 L25.315,11 L10.476,25.84 L0.722,28.278 L0.722,28.278 Z M4.84,19.476 L3.278,25.722 L9.524,24.16 L22.685,11 L18,6.315 L4.84,19.476 L4.84,19.476 Z"
@@ -150,7 +159,7 @@
         </g>
     </svg>
 
-</h3>
+</h1>
 <div id="users">
 </div>
 
@@ -188,6 +197,7 @@
         <div class="card">?</div>
     </div>
 </div>
+<div id="footer"></div>
 
 <script src="/socket.io/socket.io.js"></script>
 
@@ -202,6 +212,7 @@
     const showCardBtn = document.getElementById("showCard");
     const hideCardBtn = document.getElementById("hideCard");
     const newVoteBtn = document.getElementById("newVote");
+    const cardOptionsDiv = document.getElementById("cardOptions");
 
     const socket = io();
 
@@ -281,6 +292,7 @@
       hideCardBtn.style.display = "none";
       newVoteBtn.style.display = "none";
       if (session === "Scrum Master") {
+        cardOptionsDiv.style.display = "none";
         newVoteBtn.style.display = "";
         if (currentState.cardsShown) {
           hideCardBtn.style.display = "";
