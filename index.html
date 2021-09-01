@@ -107,6 +107,10 @@
             top: 0;
         }
 
+        a {
+            text-decoration: none;
+        }
+
         #footer {
             min-height: 20vw;
         }
@@ -140,12 +144,12 @@
         }
 
         #youare-edit {
-            cursor: pointer;
         }
     </style>
 </head>
 <body>
-<h1>Hello, <span id="youare"></span>
+<h1>Hello, <a id="youare-link" href="#">
+    <span id="youare"></span>
     <svg id="youare-edit" xmlns="http://www.w3.org/2000/svg" width="32px" height="32px" viewBox="0 0 32 32">
         <g xmlns="http://www.w3.org/2000/svg" id="Icon-Pencil" fill="#3993ff">
             <path d="M0.722,28.278 L3.16,18.524 L18,3.685 L25.315,11 L10.476,25.84 L0.722,28.278 L0.722,28.278 Z M4.84,19.476 L3.278,25.722 L9.524,24.16 L22.685,11 L18,6.315 L4.84,19.476 L4.84,19.476 Z"
@@ -158,7 +162,7 @@
                   id="Fill-172"/>
         </g>
     </svg>
-
+</a>
 </h1>
 <div id="users">
 </div>
@@ -388,7 +392,8 @@
       socket.emit("new vote", true);
     });
 
-    document.getElementById("youare-edit").addEventListener("click", function () {
+    document.getElementById("youare-link").addEventListener("click", function (e) {
+      e.preventDefault();
       enterYourName();
     });
 
